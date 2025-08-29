@@ -1,15 +1,12 @@
 import 'dart:async';
 import 'dart:convert';
 
-import 'package:audioplayers/audioplayers.dart';
-import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
-import 'package:karaoke_text/karaoke_text.dart';
+import 'package:interactive_media/interactive_media.dart';
 
 void main() {
   runApp(const MyApp());
 }
-
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -17,7 +14,7 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Karaoke Audio Contents Test',
+      title: 'Interactive Media Test',
       theme: ThemeData(primarySwatch: Colors.blue, useMaterial3: true),
       home: const MainScreen(),
     );
@@ -33,99 +30,173 @@ class MainScreen extends StatefulWidget {
 
 class _MainScreenState extends State<MainScreen> {
   final TextEditingController _jsonController = TextEditingController();
-  final TextEditingController _urlController = TextEditingController();
-  late KaraokeLyricsController _controller;
-  late AudioPlayer _audioPlayer;
-
-  String? _jsonData;
+  LyricController? _controller;
+  InteractiveMediaMetadata? _metadata;
   bool _isPlaying = false;
-  String? _selectedAudioPath;
-  String? _audioFileName;
-  bool _isAudioLoaded = false;
   Timer? _debounceTimer;
+  Key _widgetKey = UniqueKey();
 
   @override
   void initState() {
     super.initState();
-    _controller = KaraokeLyricsController();
-    _audioPlayer = AudioPlayer();
-
-    // Set initial JSON data
-    _jsonController.text = _getSampleLyrics();
+    _jsonController.text = _getSampleJson();
     _parseJson();
   }
 
-  String _getSampleLyrics() {
-    return '''[
-  {
-    "type": "span",
-    "spans": [
-      {
-        "text": "안녕하세요",
-        "offset": 0.0,
-        "dur": 2.0,
-        "style": {
-          "color": "#FF6B6B",
-          "size": 56.0
+  String _getSampleJson() {
+    return '''{
+  "template": "lyric",
+  "renderingOptions": {
+    "transitionDelay": 500,
+    "fadeInDuration": 800,
+    "fadeOutDuration": 600
+  },
+  "background": {
+    "type": "gradient",
+    "value": "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+    "opacity": 0.15
+  },
+  "styleOptions": {
+    "padding": 20
+  },
+  "contents": [
+    {
+      "audioType": "url",
+      "audioSource": "https://sarcofit-test.s3.ap-northeast-2.amazonaws.com/sample.mp3",
+      "textAlign": "left",
+      "lyrics": [
+        {
+          "type": "span",
+          "spans": [
+            {
+              "text": "길동님께",
+              "offset": 0.0,
+              "dur": 1.1,
+              "style": {
+                "color": "#FF6B6B",
+                "size": 56.0,
+                "fontWeight": "w900"
+              }
+            }
+          ]
+        },
+        {
+          "type": "spacer",
+          "height": 20.0
+        },
+        {
+          "type": "span",
+          "spans": [
+            {
+              "text": "딱맞는",
+              "offset": 1.9,
+              "dur": 0.8,
+              "style": {
+                "color": "#4ECDC4",
+                "size": 56.0,
+                "fontWeight": "w900"
+              }
+            }
+          ]
+        },
+        {
+          "type": "spacer",
+          "height": 20.0
+        },
+        {
+          "type": "span",
+          "spans": [
+            {
+              "text": "운동을",
+              "offset": 3.8,
+              "dur": 0.7,
+              "style": {
+                "color": "#45B7D1",
+                "size": 56.0,
+                "fontWeight": "w900"
+              }
+            }
+          ]
+        },
+        {
+          "type": "span",
+          "spans": [
+            {
+              "text": "준비했어요",
+              "offset": 4.5,
+              "dur": 1.0,
+              "style": {
+                "color": "#45B7D1",
+                "size": 56.0,
+                "fontWeight": "w900"
+              }
+            }
+          ]
         }
-      }
-    ]
-  },
-  {
-    "type": "spacer",
-    "height": 20.0
-  },
-  {
-    "type": "span",
-    "spans": [
-      {
-        "text": "카라오케",
-        "offset": 2.5,
-        "dur": 1.5,
-        "style": {
-          "color": "#4ECDC4",
-          "size": 56.0
+      ]
+    },
+    {
+      "audioType": "url",
+      "audioSource": "https://sarcofit-test.s3.ap-northeast-2.amazonaws.com/sample2.mp3",
+      "textAlign": "left",
+      "lyrics": [
+        {
+          "type": "span",
+          "spans": [
+            {
+              "text": "근감소증은",
+              "offset": 0.0,
+              "dur": 1.04,
+              "style": {
+                "color": "#FF6B6B",
+                "size": 56.0,
+                "fontWeight": "w900"
+              }
+            }
+          ]
+        },
+        {
+          "type": "spacer",
+          "height": 20.0
+        },
+        {
+          "type": "span",
+          "spans": [
+            {
+              "text": "운동으로",
+              "offset": 2.1,
+              "dur": 1.6,
+              "style": {
+                "color": "#4ECDC4",
+                "size": 56.0,
+                "fontWeight": "w900"
+              }
+            }
+          ]
+        },
+        {
+          "type": "spacer",
+          "height": 20.0
+        },
+        {
+          "type": "span",
+          "spans": [
+            {
+              "text": "치료해요",
+              "offset": 3.7,
+              "dur": 1.3,
+              "style": {
+                "color": "#45B7D1",
+                "size": 56.0,
+                "fontWeight": "w900"
+              }
+            }
+          ]
         }
-      }
-    ]
-  },
-  {
-    "type": "spacer",
-    "height": 20.0
-  },
-  {
-    "type": "span",
-    "spans": [
-      {
-        "text": "텍스트",
-        "offset": 4.5,
-        "dur": 1.5,
-        "style": {
-          "color": "#45B7D1",
-          "size": 56.0
-        }
-      }
-    ]
-  },
-  {
-    "type": "spacer",
-    "height": 20.0
-  },
-  {
-    "type": "span",
-    "spans": [
-      {
-        "text": "애니메이션",
-        "offset": 6.5,
-        "dur": 2.0,
-        "style": {
-          "color": "#96CEB4",
-          "size": 56.0
-        }
-      }
-    ]
-  }
-]''';
+      ]
+    }
+  ]
+}''';
   }
 
   void _parseJson() {
@@ -133,16 +204,31 @@ class _MainScreenState extends State<MainScreen> {
       final jsonString = _jsonController.text.trim();
       if (jsonString.isNotEmpty) {
         final parsed = json.decode(jsonString);
+        
+        // Dispose old controller if exists
+        _controller?.dispose();
+        _controller = null;
+        
+        // Parse metadata
+        final metadata = InteractiveMediaMetadata.fromJson(parsed);
+        
+        // Initialize controller if it's a lyric template
+        LyricController? controller;
+        if (metadata.template == TemplateType.lyric) {
+          controller = LyricController();
+        }
+        
         setState(() {
-          _jsonData = jsonString;
+          _metadata = metadata;
+          _controller = controller;
+          _widgetKey = UniqueKey(); // Force widget rebuild
         });
-        _controller.stop();
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('JSON 파싱 오류: $e'),
-          duration: const Duration(seconds: 10),
+          duration: const Duration(seconds: 3),
           action: SnackBarAction(
             label: '닫기',
             onPressed: () {
@@ -154,130 +240,29 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
-  Future<void> _pickAudioFile() async {
+  void _updateJsonField(String path, dynamic value) {
     try {
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.audio,
-        withData: true,
-      );
-
-      if (result != null && result.files.isNotEmpty) {
-        final file = result.files.first;
-        setState(() {
-          _selectedAudioPath = file.path;
-          _audioFileName = file.name;
-          _isAudioLoaded = true;
-        });
-
-        if (file.path != null) {
-          await _audioPlayer.setSource(DeviceFileSource(file.path!));
-        } else if (file.bytes != null) {
-          await _audioPlayer.setSource(BytesSource(file.bytes!));
+      final json = jsonDecode(_jsonController.text);
+      final pathParts = path.split('.');
+      dynamic current = json;
+      
+      for (int i = 0; i < pathParts.length - 1; i++) {
+        final key = pathParts[i];
+        if (key.contains('[') && key.contains(']')) {
+          final arrayKey = key.substring(0, key.indexOf('['));
+          final index = int.parse(key.substring(key.indexOf('[') + 1, key.indexOf(']')));
+          current = current[arrayKey][index];
+        } else {
+          current[key] ??= {};
+          current = current[key];
         }
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('오디오 파일이 로드되었습니다: ${file.name}'),
-            duration: const Duration(seconds: 10),
-            action: SnackBarAction(
-              label: '닫기',
-              onPressed: () {
-                ScaffoldMessenger.of(context).hideCurrentSnackBar();
-              },
-            ),
-          ),
-        );
       }
+      
+      current[pathParts.last] = value;
+      _jsonController.text = const JsonEncoder.withIndent('  ').convert(json);
+      _parseJson();
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('오디오 파일 로드 오류: $e'),
-          duration: const Duration(seconds: 10),
-          action: SnackBarAction(
-            label: '닫기',
-            onPressed: () {
-              ScaffoldMessenger.of(context).hideCurrentSnackBar();
-            },
-          ),
-        ),
-      );
-    }
-  }
-
-  Future<void> _loadAudioFromUrl() async {
-    final url = _urlController.text.trim();
-    if (url.isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('URL을 입력해주세요'),
-          duration: Duration(seconds: 10),
-        ),
-      );
-      return;
-    }
-
-    try {
-      await _audioPlayer.setSource(UrlSource(url));
-      setState(() {
-        _selectedAudioPath = url;
-        _audioFileName =
-            'URL 오디오: ${url.length > 20 ? '${url.substring(0, 20)}...' : url}';
-        _isAudioLoaded = true;
-      });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: const Text('URL에서 오디오가 로드되었습니다'),
-          duration: const Duration(seconds: 10),
-          action: SnackBarAction(
-            label: '닫기',
-            onPressed: () {
-              ScaffoldMessenger.of(context).hideCurrentSnackBar();
-            },
-          ),
-        ),
-      );
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('URL 오디오 로드 오류: $e'),
-          duration: const Duration(seconds: 10),
-          action: SnackBarAction(
-            label: '닫기',
-            onPressed: () {
-              ScaffoldMessenger.of(context).hideCurrentSnackBar();
-            },
-          ),
-        ),
-      );
-    }
-  }
-
-  Future<void> _startKaraokeWithAudio() async {
-    if (_isAudioLoaded) {
-      await _audioPlayer.resume();
-      _controller.start();
-    }
-  }
-
-  Future<void> _pauseKaraokeWithAudio() async {
-    if (_isAudioLoaded) {
-      await _audioPlayer.pause();
-      _controller.pause();
-    }
-  }
-
-  Future<void> _resumeKaraokeWithAudio() async {
-    if (_isAudioLoaded) {
-      await _audioPlayer.resume();
-      _controller.resume();
-    }
-  }
-
-  Future<void> _stopKaraokeWithAudio() async {
-    if (_isAudioLoaded) {
-      await _audioPlayer.stop();
-      _controller.stop();
+      debugPrint('JSON 업데이트 오류: $e');
     }
   }
 
@@ -285,291 +270,287 @@ class _MainScreenState extends State<MainScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Karaoke Audio Contents Test'),
+        title: const Text('Interactive Media Test'),
         backgroundColor: Theme.of(context).colorScheme.inversePrimary,
-      ),
-      body: Column(
-        children: [
-          // Audio file picker section
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(16.0),
-            decoration: BoxDecoration(
-              color: Colors.grey.shade100,
-              border: Border(bottom: BorderSide(color: Colors.grey.shade300)),
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: ElevatedButton.icon(
-                    onPressed: _pickAudioFile,
-                    icon: const Icon(Icons.audio_file),
-                    label: Text(
-                      _audioFileName ?? '오디오 파일 선택',
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  flex: 2,
-                  child: TextField(
-                    controller: _urlController,
-                    decoration: const InputDecoration(
-                      hintText: '오디오 URL 입력',
-                      border: OutlineInputBorder(),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                ElevatedButton(
-                  onPressed: _loadAudioFromUrl,
-                  child: const Text('URL 로드'),
-                ),
-              ],
-            ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh),
+            onPressed: _parseJson,
+            tooltip: 'Reload JSON',
           ),
-
-          // Main content
+        ],
+      ),
+      body: Row(
+        children: [
+          // JSON Editor (Left Panel)
           Expanded(
-            child: Row(
-              children: [
-                // JSON Editor (Left side)
-                Expanded(
-                  flex: 1,
-                  child: Container(
-                    padding: const EdgeInsets.all(16.0),
-                    decoration: BoxDecoration(
-                      border: Border(
-                        right: BorderSide(color: Colors.grey.shade300),
+            flex: 1,
+            child: Container(
+              padding: const EdgeInsets.all(16.0),
+              decoration: BoxDecoration(
+                border: Border(
+                  right: BorderSide(color: Colors.grey.shade300),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'JSON Editor',
+                        style: Theme.of(context).textTheme.titleLarge,
+                      ),
+                      TextButton.icon(
+                        onPressed: () {
+                          _jsonController.text = const JsonEncoder.withIndent('  ')
+                              .convert(jsonDecode(_jsonController.text));
+                        },
+                        icon: const Icon(Icons.format_align_left, size: 16),
+                        label: const Text('Format'),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // Quick Settings
+                  Card(
+                    child: Padding(
+                      padding: const EdgeInsets.all(12.0),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text('Quick Settings', style: TextStyle(fontWeight: FontWeight.bold)),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  decoration: const InputDecoration(
+                                    labelText: 'Audio URL',
+                                    isDense: true,
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  onSubmitted: (value) {
+                                    _updateJsonField('contents[0].audioSource', value);
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              DropdownButton<String>(
+                                value: 'network',
+                                items: const [
+                                  DropdownMenuItem(value: 'network', child: Text('Network')),
+                                  DropdownMenuItem(value: 'asset', child: Text('Asset')),
+                                ],
+                                onChanged: (value) {
+                                  if (value != null) {
+                                    _updateJsonField('contents[0].audioType', value);
+                                  }
+                                },
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 8),
+                          Row(
+                            children: [
+                              Expanded(
+                                child: TextField(
+                                  decoration: const InputDecoration(
+                                    labelText: 'Fade In (ms)',
+                                    isDense: true,
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                  onSubmitted: (value) {
+                                    final ms = int.tryParse(value);
+                                    if (ms != null) {
+                                      _updateJsonField('renderingOptions.fadeInDuration', ms);
+                                    }
+                                  },
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: TextField(
+                                  decoration: const InputDecoration(
+                                    labelText: 'Fade Out (ms)',
+                                    isDense: true,
+                                    border: OutlineInputBorder(),
+                                  ),
+                                  keyboardType: TextInputType.number,
+                                  onSubmitted: (value) {
+                                    final ms = int.tryParse(value);
+                                    if (ms != null) {
+                                      _updateJsonField('renderingOptions.fadeOutDuration', ms);
+                                    }
+                                  },
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
                       ),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'JSON Editor',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: 16),
-                        Expanded(
-                          child: TextField(
-                            controller: _jsonController,
-                            maxLines: null,
-                            expands: true,
-                            decoration: const InputDecoration(
-                              hintText: 'JSON 데이터를 입력하세요...',
-                              border: OutlineInputBorder(),
-                            ),
-                            onChanged: (value) {
-                              _debounceTimer?.cancel();
-                              _debounceTimer = Timer(
-                                const Duration(milliseconds: 100),
-                                () {
-                                  _parseJson();
-                                },
-                              );
-                            },
-                          ),
-                        ),
-                      ],
+                  ),
+                  const SizedBox(height: 16),
+                  // JSON Text Editor
+                  Expanded(
+                    child: TextField(
+                      controller: _jsonController,
+                      maxLines: null,
+                      expands: true,
+                      decoration: const InputDecoration(
+                        hintText: 'JSON 데이터를 입력하세요...',
+                        border: OutlineInputBorder(),
+                      ),
+                      style: const TextStyle(
+                        fontFamily: 'monospace',
+                        fontSize: 12,
+                      ),
+                      onChanged: (value) {
+                        _debounceTimer?.cancel();
+                        _debounceTimer = Timer(
+                          const Duration(milliseconds: 500),
+                          () {
+                            _parseJson();
+                          },
+                        );
+                      },
                     ),
                   ),
-                ),
-
-                // UI Preview (Right side)
-                Expanded(
-                  flex: 1,
-                  child: Container(
-                    padding: const EdgeInsets.all(16.0),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Preview',
-                          style: Theme.of(context).textTheme.titleLarge,
-                        ),
-                        const SizedBox(height: 16),
-                        Expanded(
-                          child: _jsonData != null
-                              ? SingleChildScrollView(
-                                  child: Column(
-                                    children: [
-                                      // Phone frame containing only KaraokeLyricsWidget
-                                      Center(
-                                        child: Container(
-                                          width: 360,
-                                          height: 716,
-                                          decoration: BoxDecoration(
-                                            color: Colors.black,
-                                            borderRadius: BorderRadius.circular(
-                                              20,
-                                            ),
-                                            border: Border.all(
-                                              color: Colors.grey.shade400,
-                                              width: 6,
-                                            ),
-                                            boxShadow: [
-                                              BoxShadow(
-                                                color: Colors.black.withOpacity(
-                                                  0.3,
-                                                ),
-                                                blurRadius: 10,
-                                                offset: const Offset(0, 5),
+                ],
+              ),
+            ),
+          ),
+          
+          // Preview (Right Panel)
+          Expanded(
+            flex: 1,
+            child: Container(
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Preview',
+                    style: Theme.of(context).textTheme.titleLarge,
+                  ),
+                  const SizedBox(height: 16),
+                  Expanded(
+                    child: _metadata != null
+                        ? Column(
+                            children: [
+                              // Phone Frame
+                              Expanded(
+                                child: Center(
+                                  child: Container(
+                                    width: 360,
+                                    height: 640,
+                                    decoration: BoxDecoration(
+                                      color: Colors.black,
+                                      borderRadius: BorderRadius.circular(20),
+                                      border: Border.all(
+                                        color: Colors.grey.shade400,
+                                        width: 6,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: Colors.black.withValues(alpha: 0.3),
+                                          blurRadius: 10,
+                                          offset: const Offset(0, 5),
+                                        ),
+                                      ],
+                                    ),
+                                    child: ClipRRect(
+                                      borderRadius: BorderRadius.circular(14),
+                                      child: Container(
+                                        color: Colors.white,
+                                        child: InteractiveMediaWidget(
+                                          key: _widgetKey,
+                                          metadata: _metadata!,
+                                          controller: _controller,
+                                          onStart: () {
+                                            setState(() {
+                                              _isPlaying = true;
+                                            });
+                                          },
+                                          onComplete: () {
+                                            setState(() {
+                                              _isPlaying = false;
+                                            });
+                                            ScaffoldMessenger.of(context).showSnackBar(
+                                              const SnackBar(
+                                                content: Text('미디어 재생이 완료되었습니다!'),
+                                                duration: Duration(seconds: 2),
                                               ),
-                                            ],
-                                          ),
-                                          child: ClipRRect(
-                                            borderRadius: BorderRadius.circular(
-                                              14,
-                                            ),
-                                            child: Container(
-                                              color: Colors.white,
-                                              child: Padding(
-                                                padding: const EdgeInsets.all(
-                                                  16.0,
-                                                ),
-                                                child: Center(
-                                                  child: KaraokeLyricsWidget(
-                                                    key: ValueKey(_jsonData),
-                                                    jsonString: _jsonData!,
-                                                    controller: _controller,
-                                                    baseTextStyle:
-                                                        const TextStyle(
-                                                          fontSize: 28,
-                                                          color: Colors.grey,
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                          fontFamily:
-                                                              'Noto Sans KR',
-                                                        ),
-                                                    highlightTextStyle:
-                                                        const TextStyle(
-                                                          fontSize: 28,
-                                                          color: Colors.blue,
-                                                          fontWeight:
-                                                              FontWeight.w700,
-                                                          fontFamily:
-                                                              'Noto Sans KR',
-                                                        ),
-                                                    onStart: () {
-                                                      setState(() {
-                                                        _isPlaying = true;
-                                                      });
-                                                    },
-                                                    onComplete: () {
-                                                      setState(() {
-                                                        _isPlaying = false;
-                                                      });
-                                                      ScaffoldMessenger.of(
-                                                        context,
-                                                      ).showSnackBar(
-                                                        const SnackBar(
-                                                          content: Text(
-                                                            '가사 애니메이션이 완료되었습니다!',
-                                                          ),
-                                                        ),
-                                                      );
-                                                    },
-                                                    onPause: () {
-                                                      setState(() {
-                                                        _isPlaying = false;
-                                                      });
-                                                    },
-                                                    onResume: () {
-                                                      setState(() {
-                                                        _isPlaying = true;
-                                                      });
-                                                    },
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
+                                            );
+                                          },
+                                          onPause: () {
+                                            setState(() {
+                                              _isPlaying = false;
+                                            });
+                                          },
+                                          onResume: () {
+                                            setState(() {
+                                              _isPlaying = true;
+                                            });
+                                          },
                                         ),
                                       ),
-
-                                      const SizedBox(height: 20),
-
-                                      // Control buttons outside the phone frame
-                                      Card(
-                                        child: Padding(
-                                          padding: const EdgeInsets.all(16.0),
-                                          child: Column(
-                                            children: [
-                                              Text(
-                                                '컨트롤',
-                                                style: Theme.of(
-                                                  context,
-                                                ).textTheme.titleMedium,
-                                              ),
-                                              const SizedBox(height: 16),
-                                              Row(
-                                                mainAxisAlignment:
-                                                    MainAxisAlignment
-                                                        .spaceEvenly,
-                                                children: [
-                                                  ElevatedButton(
-                                                    onPressed:
-                                                        _isAudioLoaded &&
-                                                            !_isPlaying
-                                                        ? _startKaraokeWithAudio
-                                                        : null,
-                                                    child: const Icon(
-                                                      Icons.play_arrow,
-                                                    ),
-                                                  ),
-                                                  ElevatedButton(
-                                                    onPressed: _isPlaying
-                                                        ? _pauseKaraokeWithAudio
-                                                        : null,
-                                                    child: const Icon(
-                                                      Icons.pause,
-                                                    ),
-                                                  ),
-                                                  ElevatedButton(
-                                                    onPressed:
-                                                        _isAudioLoaded &&
-                                                            !_isPlaying
-                                                        ? _resumeKaraokeWithAudio
-                                                        : null,
-                                                    child: const Icon(
-                                                      Icons.play_circle,
-                                                    ),
-                                                  ),
-                                                  ElevatedButton(
-                                                    onPressed: _isAudioLoaded
-                                                        ? _stopKaraokeWithAudio
-                                                        : null,
-                                                    child: const Icon(
-                                                      Icons.stop,
-                                                    ),
-                                                  ),
-                                                ],
-                                              ),
-                                              const SizedBox(height: 16),
-                                            ],
-                                          ),
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                )
-                              : const Center(
-                                  child: Text(
-                                    '유효한 JSON 데이터를 입력하세요',
-                                    style: TextStyle(
-                                      color: Colors.grey,
-                                      fontSize: 16,
                                     ),
                                   ),
                                 ),
-                        ),
-                      ],
-                    ),
+                              ),
+                              
+                              // Controls (only for lyric template)
+                              if (_metadata!.template == TemplateType.lyric && _controller != null)
+                                Container(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      IconButton(
+                                        onPressed: _isPlaying ? null : () => _controller!.start(),
+                                        icon: const Icon(Icons.play_arrow),
+                                        iconSize: 32,
+                                        tooltip: 'Play',
+                                      ),
+                                      IconButton(
+                                        onPressed: !_isPlaying ? null : () => _controller!.pause(),
+                                        icon: const Icon(Icons.pause),
+                                        iconSize: 32,
+                                        tooltip: 'Pause',
+                                      ),
+                                      IconButton(
+                                        onPressed: !_isPlaying ? null : () => _controller!.resume(),
+                                        icon: const Icon(Icons.play_circle),
+                                        iconSize: 32,
+                                        tooltip: 'Resume',
+                                      ),
+                                      IconButton(
+                                        onPressed: () => _controller!.stop(),
+                                        icon: const Icon(Icons.stop),
+                                        iconSize: 32,
+                                        tooltip: 'Stop',
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                            ],
+                          )
+                        : const Center(
+                            child: Text(
+                              '유효한 JSON 데이터를 입력하세요',
+                              style: TextStyle(
+                                color: Colors.grey,
+                                fontSize: 16,
+                              ),
+                            ),
+                          ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -580,9 +561,7 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void dispose() {
     _jsonController.dispose();
-    _urlController.dispose();
-    _controller.dispose();
-    _audioPlayer.dispose();
+    _controller?.dispose();
     _debounceTimer?.cancel();
     super.dispose();
   }

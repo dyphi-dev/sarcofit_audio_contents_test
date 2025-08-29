@@ -34,7 +34,7 @@ packages:
     source: hosted
     version: "2.13.0"
   audioplayers:
-    dependency: "direct main"
+    dependency: transitive
     description:
       name: audioplayers
       sha256: e653f162ddfcec1da2040ba2d8553fff1662b5c2a5c636f4c21a3b11bee497de
@@ -320,6 +320,14 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  freezed_annotation:
+    dependency: transitive
+    description:
+      name: freezed_annotation
+      sha256: c2e2d632dd9b8a2b7751117abcfc2b4888ecfe181bd9fca7170d9ef02e595fe2
+      url: "https://pub.dev"
+    source: hosted
+    version: "2.4.4"
   frontend_server_client:
     dependency: transitive
     description:
@@ -368,6 +376,15 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "4.1.2"
+  interactive_media:
+    dependency: "direct main"
+    description:
+      path: "."
+      ref: main
+      resolved-ref: ffe6272992568cb678a15579bc0c597bc37c7092
+      url: "https://github.com/dyphi-dev/interactive_media"
+    source: git
+    version: "0.1.1"
   io:
     dependency: transitive
     description:
@@ -392,15 +409,6 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "6.10.0"
-  karaoke_text:
-    dependency: "direct main"
-    description:
-      path: "."
-      ref: main
-      resolved-ref: "1e36e27bae8d14b4c48210bf11500ff57f517ee9"
-      url: "https://github.com/dyphi-dev/karaoke_text"
-    source: git
-    version: "0.0.1"
   leak_tracker:
     dependency: transitive
     description:
