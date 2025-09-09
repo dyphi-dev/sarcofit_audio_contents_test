@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:interactive_media/interactive_media.dart';
 
@@ -210,7 +211,46 @@ class _MainScreenState extends State<MainScreen> {
             }
           ]
         }
-      ]
+      ],
+    "endOverlay": {
+        "showOnEnd": true,
+        "heightReductionRatio": 0.5,
+        "buttons": [
+          {
+            "text": "시작하기",
+            "arguments": "primary",
+            "action": {
+              "type": "callback",
+              "data": {
+                "exerciseType": "cardio",
+                "duration": 30
+              }
+            }
+          },
+          {
+            "text": "나중에",
+            "arguments": "secondary",
+            "action": {
+              "type": "navigate",
+              "route": "/lyric"
+            }
+          },
+          {
+            "text": "히든",
+            "arguments": "ghost",
+            "action": {
+              "type": "hideOverlay"
+            }
+          },
+          {
+            "text": "뒤로가기",
+            "arguments": "outline",
+            "action": {
+              "type": "pop"
+            }
+          }
+        ]
+      }
     }
   ]
 }
@@ -548,53 +588,17 @@ class _MainScreenState extends State<MainScreen> {
                                       borderRadius: BorderRadius.circular(14),
                                       child: Container(
                                         color: Colors.white,
-                                        child: InteractiveMediaWidget(
-                                          key: _widgetKey,
-                                          metadata: _metadata!,
-                                          controller:
-                                              _metadata!.template ==
-                                                  TemplateType.lyric
-                                              ? _lyricController
-                                              : _videoController,
-                                          onStart: () {
-                                            setState(() {
-                                              _isPlaying = true;
-                                            });
-                                          },
-                                          onComplete: () {
-                                            setState(() {
-                                              _isPlaying = false;
-                                            });
-                                            ScaffoldMessenger.of(
-                                              context,
-                                            ).showSnackBar(
-                                              const SnackBar(
-                                                content: Text(
-                                                  '미디어 재생이 완료되었습니다!',
-                                                ),
-                                                duration: Duration(seconds: 2),
-                                              ),
-                                            );
-                                          },
-                                          onPause: () {
-                                            setState(() {
-                                              _isPlaying = false;
-                                            });
-                                          },
-                                          onResume: () {
-                                            setState(() {
-                                              _isPlaying = true;
-                                            });
-                                          },
-                                        ),
+                                        child: _selectedTemplate == 'lyric'
+                                            ? _buildLyricWidget()
+                                            : _buildVideoWidget(),
                                       ),
                                     ),
                                   ),
                                 ),
                               ),
 
-                              // Controls (only for lyric template)
-                              if (_metadata!.template == TemplateType.lyric &&
+                              // Controls for lyric template
+                              if (_selectedTemplate == 'lyric' &&
                                   _lyricController != null)
                                 Container(
                                   padding: const EdgeInsets.all(16.0),
@@ -635,6 +639,49 @@ class _MainScreenState extends State<MainScreen> {
                                     ],
                                   ),
                                 ),
+
+                              // Controls for video template
+                              if (_selectedTemplate == 'video' &&
+                                  _videoController != null)
+                                Container(
+                                  padding: const EdgeInsets.all(16.0),
+                                  child: Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      IconButton(
+                                        onPressed: _isPlaying
+                                            ? null
+                                            : () => _videoController!.start(),
+                                        icon: const Icon(Icons.play_arrow),
+                                        iconSize: 32,
+                                        tooltip: 'Play',
+                                      ),
+                                      IconButton(
+                                        onPressed: !_isPlaying
+                                            ? null
+                                            : () => _videoController!.pause(),
+                                        icon: const Icon(Icons.pause),
+                                        iconSize: 32,
+                                        tooltip: 'Pause',
+                                      ),
+                                      IconButton(
+                                        onPressed: !_isPlaying
+                                            ? null
+                                            : () => _videoController!.resume(),
+                                        icon: const Icon(Icons.play_circle),
+                                        iconSize: 32,
+                                        tooltip: 'Resume',
+                                      ),
+                                      IconButton(
+                                        onPressed: () =>
+                                            _videoController!.stop(),
+                                        icon: const Icon(Icons.stop),
+                                        iconSize: 32,
+                                        tooltip: 'Stop',
+                                      ),
+                                    ],
+                                  ),
+                                ),
                             ],
                           )
                         : const Center(
@@ -653,6 +700,137 @@ class _MainScreenState extends State<MainScreen> {
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildLyricWidget() {
+    if (_metadata == null || _lyricController == null) {
+      return const Center(
+        child: Text('가사 데이터를 불러올 수 없습니다', style: TextStyle(color: Colors.grey)),
+      );
+    }
+
+    return InteractiveMediaWidget(
+      key: _widgetKey,
+      metadata: _metadata!,
+      controller: _lyricController,
+      onStart: () {
+        setState(() {
+          _isPlaying = true;
+        });
+      },
+      onComplete: () {
+        setState(() {
+          _isPlaying = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('가사 재생이 완료되었습니다!'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      },
+      onPause: () {
+        setState(() {
+          _isPlaying = false;
+        });
+      },
+      onResume: () {
+        setState(() {
+          _isPlaying = true;
+        });
+      },
+    );
+  }
+
+  Widget _buildVideoWidget() {
+    if (_metadata == null || _videoController == null) {
+      return const Center(
+        child: Text(
+          '비디오 데이터를 불러올 수 없습니다',
+          style: TextStyle(color: Colors.grey),
+        ),
+      );
+    }
+
+    // 웹 환경에서는 비디오 플레이어가 제대로 작동하지 않을 수 있음
+    if (kIsWeb) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.video_library, size: 64, color: Colors.blue),
+            const SizedBox(height: 16),
+            const Text(
+              '비디오 미리보기',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              '웹 환경에서는 비디오 재생이 제한됩니다.',
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 16, color: Colors.grey),
+            ),
+            const SizedBox(height: 16),
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade100,
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(color: Colors.grey.shade300),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text(
+                    '비디오 정보:',
+                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  ),
+                  const SizedBox(height: 16),
+                  Text('템플릿: ${_metadata!.template}'),
+                  Text('콘텐츠 수: ${_metadata!.contents.length}개'),
+                  if (_metadata!.contents.isNotEmpty)
+                    Text('첫 번째 비디오: ${_metadata!.contents.first.contentType}'),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // 네이티브 환경에서는 InteractiveMediaWidget 사용
+    return InteractiveMediaWidget(
+      key: _widgetKey,
+      metadata: _metadata!,
+      controller: _videoController,
+      onStart: () {
+        setState(() {
+          _isPlaying = true;
+        });
+      },
+      onComplete: () {
+        setState(() {
+          _isPlaying = false;
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('비디오 재생이 완료되었습니다!'),
+            duration: Duration(seconds: 2),
+          ),
+        );
+      },
+      onPause: () {
+        setState(() {
+          _isPlaying = false;
+        });
+      },
+      onResume: () {
+        setState(() {
+          _isPlaying = true;
+        });
+      },
     );
   }
 
